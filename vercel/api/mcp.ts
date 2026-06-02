@@ -108,11 +108,18 @@ import {
 } from "../vendor/novada-mcp/tools/types.js";
 import { MonitorParamsSchema } from "../vendor/novada-mcp/tools/monitor.js";
 
-// ─── Edge runtime config ─────────────────────────────────────────────────────
-export const config = { runtime: "edge" };
+// ─── Vercel Function runtime (Node.js serverless) ───────────────────────────
+// NOTE: we use Node.js runtime (NOT Edge) because the underlying novada-mcp
+// tool implementations depend on Node-only modules: axios, cheerio,
+// playwright-core, exceljs, pdf-parse, and the MCP SDK uses EventEmitter.
+// Trade-off vs Edge: ~200ms cold start (vs ~50ms) + single-region (vs global edge),
+// but in exchange the entire 25-tool surface works without porting.
+export const config = {
+  runtime: "nodejs",
+  maxDuration: 60, // novada_research can take 30-45s on deep mode
+};
 
 // ─── Env shape (read from process.env on Vercel) ─────────────────────────────
-// Vercel Edge Runtime supports process.env even though it's Web-API based.
 // Required env vars:
 //   NOVADA_API_KEY            ← upstream Novada API key (vercel env add ...)
 //   KV_REST_API_URL           ← auto-injected when KV store is linked
