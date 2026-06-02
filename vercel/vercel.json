@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/mcp", "destination": "/api/mcp" }
+  ],
+  "headers": [
+    {
+      "source": "/mcp",
+      "headers": [
+        { "key": "access-control-allow-origin", "value": "*" },
+        { "key": "access-control-allow-methods", "value": "GET, POST, OPTIONS" },
+        { "key": "access-control-allow-headers", "value": "content-type, authorization, mcp-session-id" }
+      ]
+    }
+  ]
+}
