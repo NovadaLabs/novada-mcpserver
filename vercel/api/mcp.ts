@@ -463,7 +463,65 @@ function getClientIp(request: Request): string {
   return "unknown";
 }
 
-export default async function handler(request: Request): Promise<Response> {
+// ─── Vercel Node runtime adapter ─────────────────────────────────────────────
+// Vercel's Node.js Functions runtime invokes handlers with Node's native
+// IncomingMessage / ServerResponse — NOT Fetch API Request/Response. But the
+// MCP-handler code below was written against Fetch API (request.headers.get(),
+// new Response(...)). To keep that body working on Node, the default export is
+// a Node-style wrapper that adapts Node req/res ↔ Fetch Request/Response.
+//
+// If we ever switch to runtime: "edge" (or Fluid Compute's web-style handler),
+// drop the adapter and rename `fetchHandler` → default export.
+
+import type { IncomingMessage, ServerResponse } from "node:http";
+
+async function nodeReqToWebReq(req: IncomingMessage): Promise<Request> {
+  const host = (req.headers.host as string) || "localhost";
+  const url = `https://${host}${req.url || "/"}`;
+  const method = (req.method || "GET").toUpperCase();
+
+  // Slurp body for methods that have one. Vercel buffers small bodies into
+  // req.body already on some runtimes; we read the stream to be safe.
+  let body: BodyInit | undefined = undefined;
+  if (!["GET", "HEAD"].includes(method)) {
+    const chunks: Buffer[] = [];
+    for await (const chunk of req as AsyncIterable<Buffer>) chunks.push(chunk);
+    if (chunks.length) body = Buffer.concat(chunks);
+  }
+
+  const headers = new Headers();
+  for (const [k, v] of Object.entries(req.headers)) {
+    if (Array.isArray(v)) v.forEach(vv => headers.append(k, vv));
+    else if (typeof v === "string") headers.set(k, v);
+  }
+
+  return new Request(url, { method, headers, body });
+}
+
+async function sendWebRes(res: ServerResponse, webRes: Response): Promise<void> {
+  res.statusCode = webRes.status;
+  webRes.headers.forEach((v, k) => res.setHeader(k, v));
+  const text = await webRes.text();
+  res.end(text);
+}
+
+export default async function nodeHandler(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  try {
+    const webReq = await nodeReqToWebReq(req);
+    const webRes = await fetchHandler(webReq);
+    await sendWebRes(res, webRes);
+  } catch (err) {
+    res.statusCode = 500;
+    res.setHeader("content-type", "application/json");
+    res.end(JSON.stringify({
+      error: "INTERNAL_ERROR",
+      message: (err as Error)?.message ?? String(err),
+    }));
+  }
+}
+
+// ─── Original Fetch-API handler (called by the Node adapter above) ───────────
+async function fetchHandler(request: Request): Promise<Response> {
   const env = readEnv();
   // Vercel Node.js Functions: request.url is path-only ("/mcp"). Vercel Edge:
   // absolute URL. Provide a base so URL parsing works in both runtimes.
