@@ -133,7 +133,7 @@ export const config = {
 //   KV_REST_API_TOKEN         ← auto-injected when KV store is linked
 //   STUB_AUTH_WARNING_ACCEPTED ← "true" to unlock the worker (stub gate)
 //   RATE_LIMIT_PER_MIN        ← per-IP rate limit (default 60)
-//   FREE_PLAN_MONTHLY_QUOTA   ← per-token monthly quota (default 5000)
+//   FREE_PLAN_MONTHLY_QUOTA   ← per-token monthly quota (default 1000)
 //   LOG_LEVEL                 ← "info" | "silent"
 //   NOVADA_API_BASE           ← https://api.novada.com (informational)
 interface Env {
@@ -149,7 +149,7 @@ function readEnv(): Env {
   return {
     NOVADA_API_BASE: process.env.NOVADA_API_BASE || "https://api.novada.com",
     LOG_LEVEL: process.env.LOG_LEVEL || "info",
-    FREE_PLAN_MONTHLY_QUOTA: process.env.FREE_PLAN_MONTHLY_QUOTA || "5000",
+    FREE_PLAN_MONTHLY_QUOTA: process.env.FREE_PLAN_MONTHLY_QUOTA || "1000",
     NOVADA_API_KEY: process.env.NOVADA_API_KEY,
     STUB_AUTH_WARNING_ACCEPTED: process.env.STUB_AUTH_WARNING_ACCEPTED,
     RATE_LIMIT_PER_MIN: process.env.RATE_LIMIT_PER_MIN,
@@ -220,7 +220,7 @@ async function validateToken(token: string, env: Env): Promise<TokenInfo> {
   if ((env.LOG_LEVEL ?? "info") !== "silent") {
     console.warn("[novada-mcp-hosted] STUB AUTH ACTIVE — any sk-eu-novada-* prefix accepted. Wire sub2api before production launch.");
   }
-  const monthlyQuota = parseInt(env.FREE_PLAN_MONTHLY_QUOTA || "5000", 10);
+  const monthlyQuota = parseInt(env.FREE_PLAN_MONTHLY_QUOTA || "1000", 10);
   return { valid: true, plan: "free", quota_remaining: monthlyQuota };
 }
 
@@ -256,7 +256,7 @@ function monthKey(): string {
 
 /** Returns the new remaining count, or -1 if the request must be rejected. */
 async function decrementQuota(token: string, env: Env, plan: "free" | "pro"): Promise<number> {
-  const monthlyQuota = parseInt(env.FREE_PLAN_MONTHLY_QUOTA || "5000", 10);
+  const monthlyQuota = parseInt(env.FREE_PLAN_MONTHLY_QUOTA || "1000", 10);
   const key = `${token}:${monthKey()}`;
   const raw = await kv.get<string | number>(key);
   const used = raw ? (typeof raw === "number" ? raw : parseInt(String(raw), 10)) : 0;
