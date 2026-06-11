@@ -14,19 +14,12 @@
  * before each tool call. 429 when exhausted.
  */
 
-// ─── Browser-API polyfills (CRITICAL — must run BEFORE any other import) ─────
-// pdfjs-dist (transitively imported via pdf-parse via vendored novada-mcp/tools/extract.js)
-// references DOMMatrix / ImageData / Path2D at module top-level. In Node.js
-// serverless these don't exist → ReferenceError at import → FUNCTION_INVOCATION_FAILED.
-// We don't actually USE PDF rendering on the hosted server (extract treats PDFs
-// as opaque blobs), so empty class stubs are sufficient to satisfy the
-// `typeof X === 'undefined'` checks and module-init type references.
-// Equivalent fix would be to remove pdf-parse from vercel/package.json + stub
-// extract.js — this polyfill is the smaller-blast-radius option.
-const g = globalThis as any;
-g.DOMMatrix ||= class DOMMatrix { constructor(..._: unknown[]) {} };
-g.ImageData ||= class ImageData { constructor(..._: unknown[]) {} };
-g.Path2D ||= class Path2D { constructor(..._: unknown[]) {} };
+// 🔴 RUNTIME POLYFILLS — must be the VERY FIRST import (side-effect only).
+// See ./_polyfills.js for why. ESM hoists imports but resolves them in source
+// order; listing this first ensures DOMMatrix/ImageData/Path2D stubs are in
+// place before pdfjs-dist (transitively imported via pdf-parse) runs its
+// module-init code.
+import "./_polyfills.js";
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
