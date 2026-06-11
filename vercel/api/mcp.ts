@@ -268,7 +268,10 @@ async function decrementQuota(token: string, env: Env, plan: "free" | "pro"): Pr
 }
 
 function extractToken(req: Request): string | null {
-  const url = new URL(req.url);
+  // Vercel Node.js Functions: req.url is path-only ("/mcp"). Vercel Edge: it's
+  // the absolute URL. Provide a base so URL parsing works in both runtimes.
+  const base = `https://${req.headers.get("host") || "localhost"}`;
+  const url = new URL(req.url, base);
   const qp = url.searchParams.get("token");
   if (qp) return qp.trim();
   const auth = req.headers.get("authorization") || req.headers.get("Authorization");
@@ -462,7 +465,10 @@ function getClientIp(request: Request): string {
 
 export default async function handler(request: Request): Promise<Response> {
   const env = readEnv();
-  const url = new URL(request.url);
+  // Vercel Node.js Functions: request.url is path-only ("/mcp"). Vercel Edge:
+  // absolute URL. Provide a base so URL parsing works in both runtimes.
+  const base = `https://${request.headers.get("host") || "localhost"}`;
+  const url = new URL(request.url, base);
 
   // Vercel rewrites /mcp -> /api/mcp, so both pathnames must be accepted here.
   // We also expose a health probe on / and /health for ops.
