@@ -94,7 +94,6 @@ export async function novadaResearch(params, apiKey) {
     }));
     const failedCount = allResults.filter(r => r.failed).length;
     const succeededCount = allResults.length - failedCount;
-    const failedQueries = allResults.filter(r => r.failed).map(r => r.query);
     const totalResults = allResults.reduce((sum, r) => sum + r.results.length, 0);
     const uniqueSources = new Map();
     for (const { results } of allResults) {
@@ -168,16 +167,14 @@ export async function novadaResearch(params, apiKey) {
             ``,
             `**Cannot complete research on:** "${topic}"`,
             ``,
-            `**Fix:**`,
-            `- Activate Scraper API at https://dashboard.novada.com/overview/scraper/`,
-            `- Run \`novada_health_all()\` to check which API products are currently active on your account`,
+            `**Fix:** Activate Scraper API at https://dashboard.novada.com/overview/scraper/`,
             ``,
             `**Alternatives while search is unavailable:**`,
             `- Use \`novada_extract\` with specific URLs you already know`,
             `- Use \`novada_map\` on a relevant site, then \`novada_extract\` on discovered pages`,
             ``,
-            `## Agent Action`,
-            `agent_instruction: status:search_unavailable | action: call novada_health_all() to diagnose, then activate_scraper_api | question_not_answered: true`,
+            `## Agent Instruction`,
+            `agent_status: search_unavailable | action: activate_scraper_api | question_not_answered: true`,
         ].join("\n");
     }
     // Build structured synthesis from extracted contents + snippet fallbacks
@@ -212,8 +209,6 @@ export async function novadaResearch(params, apiKey) {
         depth: depthValue,
         queriesSucceeded: succeededCount,
         queriesTotal: queries.length,
-        generatedQueries: queries,
-        failedQueries,
         sourcesFetchedCount: extractedContents.length,
         snippetOnlyCount: extractFailedSources.length,
         summaryText,
@@ -253,20 +248,9 @@ function synthesizeAnswer(question, extracted, failedSources, allSources) {
     }
     if (fragments.length === 0)
         return fallback;
-    // Rank fragments by keyword overlap with the question — most relevant first
-    const questionKeywords = question.toLowerCase().split(/\W+/).filter(w => w.length > 3 && !STOP_WORDS.has(w));
-    if (questionKeywords.length > 0) {
-        fragments.sort((a, b) => {
-            const aText = a.text.toLowerCase();
-            const bText = b.text.toLowerCase();
-            const scoreA = questionKeywords.filter(kw => aText.includes(kw)).length;
-            const scoreB = questionKeywords.filter(kw => bText.includes(kw)).length;
-            return scoreB - scoreA;
-        });
-    }
     // Build structured synthesis
     const parts = [];
-    // 1. Lead with the most question-relevant fragment
+    // 1. Lead with a direct answer from the most content-rich fragment
     const primary = fragments[0];
     parts.push(primary.text);
     // 2. Add contrasting/supplementary points from other sources
@@ -294,20 +278,12 @@ function formatResearchOutput(args) {
     const findingBullets = args.findingBullets.length > 0 ? args.findingBullets : [`- No structured findings extracted.`];
     const sourceLines = args.sourceLines.length > 0 ? args.sourceLines : [`- No sources fetched.`];
     const agentHints = args.agentHints.length > 0 ? args.agentHints : [`- Try a narrower query or provide known source URLs to inspect directly.`];
-    const failedQueriesLine = args.failedQueries && args.failedQueries.length > 0
-        ? [`**failed_queries**: ${args.failedQueries.map(q => `"${q}"`).join(", ")}`]
-        : [];
-    const generatedQueriesLines = args.generatedQueries && args.generatedQueries.length > 0
-        ? [`**generated_queries**:`, ...args.generatedQueries.map((q, i) => `  ${i + 1}. ${q}`)]
-        : [];
     const lines = [
         `## Research: ${args.topic}`,
         ``,
         `**Query**: ${args.query}`,
         `**depth**: ${args.depth}`,
         `**queries**: ${args.queriesSucceeded}/${args.queriesTotal} succeeded`,
-        ...failedQueriesLine,
-        ...generatedQueriesLines,
         `**sources_extracted**: ${args.sourcesFetchedCount} full + ${args.snippetOnlyCount} snippet-only`,
         `**search_strategy**: concurrent engine racing (google + duckduckgo + bing)`,
         `**timestamp**: ${timestamp}`,
@@ -326,13 +302,8 @@ function formatResearchOutput(args) {
         `## Agent Hints`,
         ...agentHints,
         ``,
-        `## Agent Action`,
-        `agent_instruction: status:${synthesisStatus === "ok" ? "success" : "partial"} | depth:${args.depth} | queries:${args.queriesSucceeded}/${args.queriesTotal} | sources:${args.sourcesFetchedCount} | synthesis:${synthesisStatus}`,
-        `next: novada_extract on specific source URLs for full content`,
-        `next: novada_research with focus="<subtopic>" to narrow coverage`,
-        ...(args.failedQueries && args.failedQueries.length > 0
-            ? [`note: ${args.failedQueries.length} queries failed — retry those searches individually or add focus param`]
-            : []),
+        `## Agent Notice — Coverage`,
+        `requested_depth: ${args.depth} | queries: ${args.queriesSucceeded}/${args.queriesTotal} | sources_extracted: ${args.sourcesFetchedCount} | snippet_only: ${args.snippetOnlyCount} | synthesis: ${synthesisStatus}`,
     ];
     return lines.join("\n");
 }

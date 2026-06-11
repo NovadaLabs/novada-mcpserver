@@ -26,4 +26,13 @@ export { novadaMonitor, validateMonitorParams, MonitorParamsSchema } from "./mon
 export { novadaSetup, validateSetupParams, SetupParamsSchema } from "./setup.js";
 export { validateSearchParams, validateExtractParams, validateCrawlParams, validateResearchParams, validateMapParams, validateProxyParams, validateScrapeParams, validateScrapeParamsFull, validateVerifyParams, validateUnblockParams, validateBrowserParams, validateHealthParams } from "./types.js";
 export { classifyError, NovadaErrorCode } from "../_core/errors.js";
+// ─── KR-6: Novada developer-api account-management tools ────────────────────
+export { novadaWalletBalance, validateWalletBalanceParams, WalletBalanceParamsSchema } from "./wallet_balance.js";
+export { novadaWalletUsageRecord, validateWalletUsageRecordParams, WalletUsageRecordParamsSchema } from "./wallet_usage_record.js";
+export { novadaProxyAccountCreate, validateProxyAccountCreateParams, ProxyAccountCreateParamsSchema } from "./proxy_account_create.js";
+export { novadaProxyAccountList, validateProxyAccountListParams, ProxyAccountListParamsSchema } from "./proxy_account_list.js";
+export { novadaTrafficDaily, validateTrafficDailyParams, TrafficDailyParamsSchema } from "./traffic_daily.js";
+export { novadaPlanBalanceAll, validatePlanBalanceAllParams, PlanBalanceAllParamsSchema } from "./plan_balance_all.js";
+export { novadaCaptureLogs, validateCaptureLogsParams, CaptureLogsParamsSchema } from "./capture_logs.js";
+export { novadaAccountSummary, validateAccountSummaryParams, AccountSummaryParamsSchema } from "./account_summary.js";
 //# sourceMappingURL=index.js.map
