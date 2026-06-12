@@ -269,9 +269,12 @@ function extractToken(req: Request): string | null {
   const base = `https://${req.headers.get("host") || "localhost"}`;
   const url = new URL(req.url, base);
 
-  // 1. Path-based auth (Firecrawl pattern): /:key/mcp → rewritten to /api/mcp?pathKey=:key
+  // 1. Path-based auth (Firecrawl pattern): /:key/mcp
+  //    Vercel rewrite may inject ?pathKey=:key, OR Node runtime may show the original path.
   const pathKey = url.searchParams.get("pathKey");
   if (pathKey && pathKey.trim().length >= 16) return pathKey.trim();
+  const pathAuthMatch = url.pathname.match(/^\/([a-zA-Z0-9_\-]{16,})\/mcp$/);
+  if (pathAuthMatch) return pathAuthMatch[1];
 
   // 2. Query param: ?token=YOUR_API_KEY
   const qp = url.searchParams.get("token");
@@ -556,6 +559,7 @@ async function fetchHandler(request: Request, nodeCtx?: NodeCtx): Promise<Respon
   const url = new URL(request.url, base);
 
   // Vercel rewrites /mcp -> /api/mcp, so both pathnames must be accepted here.
+  // Path-based auth: /:key/mcp is also valid (Firecrawl pattern for Claude.ai).
   // We also expose a health probe on / and /health for ops.
   const pathname = url.pathname;
 
@@ -565,7 +569,12 @@ async function fetchHandler(request: Request, nodeCtx?: NodeCtx): Promise<Respon
     });
   }
 
-  if (pathname !== "/mcp" && pathname !== "/api/mcp") {
+  // Accept /mcp, /api/mcp, or /:key/mcp (path-based auth for Claude.ai).
+  // In Vercel Node runtime, req.url may show the original path even after rewrite.
+  const pathMatch = pathname.match(/^\/([a-zA-Z0-9_\-]{16,})\/mcp$/);
+  const isMcpPath = pathname === "/mcp" || pathname === "/api/mcp" || !!pathMatch;
+
+  if (!isMcpPath) {
     return jsonError(404, "NOT_FOUND", "Unknown path. The MCP endpoint is POST/GET /mcp.");
   }
 
