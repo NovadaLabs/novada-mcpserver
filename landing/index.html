@@ -216,6 +216,10 @@
       <span class="text-[11px] font-semibold tracking-wider text-violet bg-violet-50 px-2 py-1 rounded">MCP</span>
     </a>
     <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-ink-700">
+      <a href="#playground" class="inline-flex items-center gap-1.5 text-violet font-semibold hover:text-violet-600">
+        <span class="w-1.5 h-1.5 rounded-full bg-violet animate-pulse"></span>
+        <span class="en">Playground</span><span class="zh">在线试玩</span>
+      </a>
       <a href="#install" class="hover:text-violet">Install</a>
       <a href="#tools" class="hover:text-violet"><span class="en">Tools</span><span class="zh">工具</span></a>
       <a href="#free" class="hover:text-violet"><span class="en">Free tier</span><span class="zh">免费额度</span></a>
@@ -265,11 +269,12 @@
     </div>
 
     <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mt-7">
-      <a href="https://dashboard.novada.com/sign-up/" class="inline-flex items-center justify-center bg-mint hover:bg-mint-600 text-ink font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-mint/30 transition w-full sm:w-auto">
-        <span class="en">Get free API key →</span><span class="zh">免费获取 API 密钥 →</span>
+      <a href="#playground" class="inline-flex items-center justify-center gap-2 bg-mint hover:bg-mint-600 text-ink font-bold px-7 py-3.5 rounded-xl shadow-lg shadow-mint/30 transition w-full sm:w-auto">
+        <span class="w-2 h-2 rounded-full bg-ink animate-pulse"></span>
+        <span class="en">▶ Try it live — no signup</span><span class="zh">▶ 在线试玩 — 无需注册</span>
       </a>
-      <a href="#install" class="inline-flex items-center justify-center border border-white/30 hover:border-mint hover:text-mint text-white font-semibold px-7 py-3.5 rounded-xl transition w-full sm:w-auto">
-        <span class="en">Install guide</span><span class="zh">查看接入指南</span>
+      <a href="https://dashboard.novada.com/sign-up/" class="inline-flex items-center justify-center border border-white/30 hover:border-mint hover:text-mint text-white font-semibold px-7 py-3.5 rounded-xl transition w-full sm:w-auto">
+        <span class="en">Get free API key →</span><span class="zh">免费获取 API 密钥 →</span>
       </a>
     </div>
     <p class="text-sm text-white/55 mt-5">
@@ -332,13 +337,18 @@
 <section id="playground" class="py-20 bg-white border-b border-violet-100">
   <div class="max-w-4xl mx-auto px-5">
     <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 bg-violet-50 text-violet rounded-full px-3 py-1 text-xs font-semibold mb-4">
+        <span class="w-1.5 h-1.5 rounded-full bg-violet animate-pulse"></span>
+        <span class="en">LIVE PLAYGROUND · runs against production</span>
+        <span class="zh">在线 PLAYGROUND · 直连生产端点</span>
+      </div>
       <h2 class="text-3xl sm:text-4xl font-bold text-ink mb-3 display">
-        <span class="en">Try it in your browser</span>
-        <span class="zh">浏览器里直接试</span>
+        <span class="en">Try it right here — no install, no signup</span>
+        <span class="zh">就在这里试 — 无需安装,无需注册</span>
       </h2>
       <p class="text-ink-700/70 max-w-2xl mx-auto">
-        <span class="en">No install. No sign-up. Pick a tool, hit Run, see a real response from <code class="mono text-violet">mcp.novada.com</code>. Quota and rate-limit counter live next to each result.</span>
-        <span class="zh">无需安装,无需注册。选一个工具,点 Run,直接看 <code class="mono text-violet">mcp.novada.com</code> 的真实响应,右侧实时显示配额与速率。</span>
+        <span class="en">Pick a tool, hit Run, see a real response from <code class="mono text-violet">mcp.novada.com</code>. Live quota counter next to each result. This is the exact same endpoint your AI agent calls.</span>
+        <span class="zh">选一个工具,点 Run,直接看 <code class="mono text-violet">mcp.novada.com</code> 的真实响应,右侧实时显示剩余配额。这就是你的 AI agent 调用的同一个端点。</span>
       </p>
     </div>
 
